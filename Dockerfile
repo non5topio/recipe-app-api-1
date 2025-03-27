@@ -1,5 +1,5 @@
-# Use a lightweight Python base image
-FROM python:3.9-alpine3.18 AS test
+# Use a Debian-based slim image for better compatibility
+FROM python:3.9-slim AS test
 
 LABEL maintainer="srishtinonstopio"
 
@@ -7,16 +7,16 @@ LABEL maintainer="srishtinonstopio"
 ENV PYTHONUNBUFFERED=1 \
     PATH="/py/bin:$PATH"
 
-# Install system dependencies
-RUN apk add --no-cache \
+# Install dependencies
+RUN apt-get update && apt-get install -y \
     bash \
     gcc \
-    musl-dev \
     libffi-dev \
-    postgresql-dev \
-    && python -m venv /py
+    postgresql-client \
+    && python -m venv /py \
+    && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install dependencies in a separate layer
+# Upgrade pip and install dependencies
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 
@@ -28,9 +28,6 @@ ARG DEV=false
 RUN if [ "$DEV" = "true" ]; then \
         /py/bin/pip install --no-cache-dir -r /tmp/requirements.dev.txt; \
     fi
-
-# Remove temporary files
-RUN rm -rf /tmp
 
 # Create a non-root user for security
 RUN adduser --disabled-password --no-create-home django-user
@@ -48,5 +45,5 @@ EXPOSE 8000
 # Switch to non-root user
 USER django-user
 
-# Default command (can be overridden in Docker Compose)
+# Default command
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app.wsgi:application"]
