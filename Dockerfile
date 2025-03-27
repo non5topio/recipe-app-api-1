@@ -1,4 +1,4 @@
-# Use a lightweight Python image
+# Use a lightweight Python image with glibc support
 FROM python:3.9-slim AS test
 
 # Maintainer information
@@ -10,9 +10,13 @@ ENV PYTHONUNBUFFERED=1
 # Set working directory inside the container
 WORKDIR /app
 
-# Install necessary dependencies for psycopg2
-RUN apk add --no-cache \
-    postgresql-dev gcc musl-dev python3-dev libffi-dev
+# Install necessary dependencies for psycopg2 and other build tools
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    python3-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirement files
 COPY ./requirements.txt /tmp/requirements.txt
@@ -35,7 +39,7 @@ RUN python -m venv /py && \
         /py/bin/pip install -r /tmp/requirements.dev.txt; \
     fi && \
     rm -rf /tmp && \
-    adduser --disabled-password --no-create-home django-user
+    useradd --no-create-home django-user
 
 # Set the correct path for virtual environment
 ENV PATH="/py/bin:$PATH"
