@@ -1,5 +1,5 @@
 # Use a lightweight Python image
-FROM python:3.9-alpine3.13 AS test
+FROM python:3.9-slim AS test
 
 # Maintainer information
 LABEL maintainer="srishtinonstopio"
