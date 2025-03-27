@@ -1,5 +1,5 @@
 # Use a lightweight Python base image
-FROM python:3.9-alpine3.18 AS base
+FROM python:3.9-alpine3.18 AS test
 
 LABEL maintainer="srishtinonstopio"
 
