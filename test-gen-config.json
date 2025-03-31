@@ -12,7 +12,7 @@
       ],
       "source-test-file-paths": [
         {
-          "source-file-path": "app/core/models.py",
+          "source-file-path": "recipe-app-api-1/app/core/models.py",
           "test-file-path": "app/core/tests/test_models.py"
         }
       ],
