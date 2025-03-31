@@ -7,6 +7,9 @@ LABEL maintainer="srishtinonstopio"
 # Ensure output is sent straight to terminal without buffering
 ENV PYTHONUNBUFFERED=1
 
+# Create a non-root user early to avoid permission issues
+RUN useradd --create-home django-user
+
 # Set working directory inside the container
 WORKDIR /app
 
@@ -25,6 +28,12 @@ COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 # Copy application code
 COPY ./app /app
 
+# Change ownership of /app to django-user to avoid permission issues
+RUN chown -R django-user:django-user /app
+
+# Create a writable log file
+RUN touch /app/run.log && chmod 666 /app/run.log && chown django-user:django-user /app/run.log
+
 # Expose port 8000 for Django
 EXPOSE 8000
 
@@ -38,11 +47,10 @@ RUN python -m venv /py && \
     if [ "$DEV" = "true" ]; then \
         /py/bin/pip install -r /tmp/requirements.dev.txt; \
     fi && \
-    rm -rf /tmp && \
-    useradd --no-create-home django-user
+    rm -rf /tmp
 
 # Set the correct path for virtual environment
 ENV PATH="/py/bin:$PATH"
 
-# Run container as django-user instead of root
+# Switch to non-root user
 USER django-user
