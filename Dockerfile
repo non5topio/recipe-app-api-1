@@ -28,6 +28,9 @@ COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 # Copy application code
 COPY ./app /app
 
+# Copy pytest.ini
+COPY pytest.ini /app/pytest.ini
+
 # Change ownership of /app to django-user to avoid permission issues
 RUN chown -R django-user:django-user /app
 
