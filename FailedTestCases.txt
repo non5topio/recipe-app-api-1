@@ -1,0 +1,90 @@
+
+def test_create_user_email_exceeds_max_length(self):
+    """Test creating a user with email exceeding maximum length raises an error"""
+    email = 'a' * 300 + '@example.com'
+    password = 'ValidPass123'
+    name = 'Valid Name'
+    with self.assertRaises(ValueError) as context:
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+    self.assertIn('Email exceeds maximum length', str(context.exception))
+
+
+
+def test_create_user_email_exceeds_max_length(self):
+    """Test creating a user with email exceeding maximum length raises an error"""
+    email = 'a' * 300 + '@example.com'
+    password = 'ValidPass123'
+    name = 'Valid Name'
+    with self.assertRaises(ValueError) as context:
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+    self.assertIn('Email exceeds maximum length', str(context.exception))
+
+
+
+def test_create_user_name_exceeds_max_length(self):
+    """Test creating a user with name exceeding maximum length raises an error"""
+    email = 'user@example.com'
+    password = 'ValidPass123'
+    name = 'a' * 300
+    with self.assertRaises(ValueError) as context:
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+    self.assertIn('Name exceeds maximum length', str(context.exception))
+
+
+
+def test_create_user_email_exceeds_max_length(self):
+    """Test creating a user with email exceeding maximum length raises an error"""
+    email = 'a' * 300 + '@example.com'
+    password = 'ValidPass123'
+    name = 'Valid Name'
+    with self.assertRaises(ValueError) as context:
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+    self.assertIn('Email exceeds maximum length', str(context.exception))
+
+
+
+def test_create_user_name_exceeds_max_length(self):
+    """Test creating a user with name exceeding maximum length raises an error"""
+    email = 'user@example.com'
+    password = 'ValidPass123'
+    name = 'a' * 300
+    with self.assertRaises(ValueError) as context:
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+    self.assertIn('Name exceeds maximum length', str(context.exception))
+
+
+
+def test_create_user_invalid_email_format(self):
+    """Test creating a user with invalid email format raises an error"""
+    email = 'invalidemail.com'
+    password = 'ValidPass123'
+    name = "Valid Name"
+    with self.assertRaises(ValueError) as context:
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+    self.assertIn('Enter a valid email address', str(context.exception))
+
+
