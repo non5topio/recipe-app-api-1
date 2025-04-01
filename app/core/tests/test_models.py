@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 
 # 
 class ModelTests(TestCase):
@@ -40,3 +41,51 @@ class ModelTests(TestCase):
         )
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_create_user_with_duplicate_email(self):
+        """Test creating a user with duplicate email raises an error"""
+        email = 'duplicate@example.com'
+        password = 'ValidPass123'
+        name1 = 'First User'
+        name2 = 'Second User'
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name1,
+        )
+        with self.assertRaises(Exception) as context:
+            get_user_model().objects.create_user(
+                email=email,
+                password=password,
+                name=name2,
+            )
+        self.assertIn('unique constraint', str(context.exception).lower())
+
+
+    def test_create_user_with_max_length_name(self):
+        """Test creating a user with name at maximum allowed length"""
+        email = 'user@example.com'
+        password = 'ValidPass123'
+        name = 'a' * 255
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+        self.assertEqual(user.name, name)
+        self.assertEqual(user.email, email)
+        self.assertTrue(user.check_password(password))
+
+
+    def test_create_user_with_max_length_email(self):
+        """Test creating a user with email at maximum allowed length"""
+        email = 'a' * 255 + '@example.com'
+        password = 'ValidPass123'
+        name = 'Valid Name'
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+        self.assertEqual(user.email, email)
+        self.assertTrue(user.check_password(password))
