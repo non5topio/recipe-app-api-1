@@ -42,4 +42,61 @@ class ModelTests(TestCase):
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
+    def test_create_users_with_duplicate_email(self):
+        """Test that creating multiple users with the same email raises an IntegrityError"""
+        email = 'duplicate@example.com'
+        password1 = 'ValidPass123'
+        name1 = 'User One'
+        password2 = 'AnotherPass456'
+        name2 = 'User Two'
+        
+        # Create first user
+        user1 = get_user_model().objects.create_user(
+            email=email,
+            password=password1,
+            name=name1
+        )
+        self.assertEqual(user1.email, email)
+        self.assertTrue(user1.check_password(password1))
+        
+        # Attempt to create second user with the same email
+        with self.assertRaises(IntegrityError):
+            get_user_model().objects.create_user(
+                email=email,
+                password=password2,
+                name=name2
+            )
+
+
+    def test_create_user_with_max_length_name(self):
+        """Test creating a user with a name exactly 255 characters long"""
+        email = 'test@example.com'
+        password = 'ValidPass123'
+        name = 'a' * 255
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+        self.assertEqual(user.name, name)
+        self.assertEqual(len(user.name), 255)
+        self.assertTrue(user.check_password(password))
+
+
+    def test_create_user_with_max_length_email(self):
+        """Test creating a user with an email exactly 255 characters long"""
+        email_local_part = 'a' * 243
+        email = f"{email_local_part}@example.com"  # Total length = 243 + 12 = 255
+        password = 'ValidPass123'
+        name = 'Test User'
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+        self.assertEqual(user.email, email)
+        self.assertTrue(user.check_password(password))
+        self.assertEqual(user.name, name)
+
+
    

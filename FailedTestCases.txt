@@ -88,3 +88,87 @@ def test_create_user_invalid_email_format(self):
     self.assertIn('Enter a valid email address', str(context.exception))
 
 
+
+def test_create_user_with_exceeding_email_length(self):
+    """Test creating a user with an email exceeding 255 characters raises an error"""
+    email = 'a' * 246 + '@example.com'  # Exceeds 255 characters
+    password = 'ValidPass123'
+    name = 'Test User'
+    with self.assertRaises(IntegrityError):
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+
+
+
+def test_create_user_with_exceeding_email_length(self):
+    """Test creating a user with an email exceeding 255 characters raises an error"""
+    email = 'a' * 246 + '@example.com'  # Exceeds 255 characters
+    password = 'ValidPass123'
+    name = 'Test User'
+    with self.assertRaises(IntegrityError):
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+
+
+
+def test_create_user_with_exceeding_name_length(self):
+    """Test creating a user with a name exceeding 255 characters raises an error"""
+    email = 'test@example.com'
+    password = 'ValidPass123'
+    name = 'a' * 256  # Exceeds 255 characters
+    with self.assertRaises(IntegrityError):
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+
+
+
+def test_create_user_with_exceeding_email_length(self):
+    """Test creating a user with an email exceeding 255 characters raises an error"""
+    email = 'a' * 246 + '@example.com'  # Exceeds 255 characters
+    password = 'ValidPass123'
+    name = 'Test User'
+    with self.assertRaises(IntegrityError):
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+
+
+
+def test_create_user_with_exceeding_name_length(self):
+    """Test creating a user with a name exceeding 255 characters raises an error"""
+    email = 'test@example.com'
+    password = 'ValidPass123'
+    name = 'a' * 256  # Exceeds 255 characters
+    with self.assertRaises(IntegrityError):
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+
+
+
+def test_create_user_with_invalid_email_format(self):
+    """Test creating a user with an invalid email format raises a ValidationError"""
+    email = 'invalid-email-format'
+    password = 'ValidPass123'
+    name = 'Test User'
+    with self.assertRaises(ValidationError):
+        get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+
+
