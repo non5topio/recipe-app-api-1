@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 
 class ModelTests(TestCase):
@@ -97,6 +98,32 @@ class ModelTests(TestCase):
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
         self.assertEqual(user.name, name)
+
+    def test_create_user_with_unicode_special_characters_in_name(self):
+        """Test creating a user with a name containing Unicode and special characters"""
+        email = 'unicode@example.com'
+        password = 'ValidPass123'
+        name = '测试用户@#€'
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+        self.assertEqual(user.name, name)
+        self.assertTrue(user.check_password(password))
+
+
+
+    def test_create_user_without_name_raises_error(self):
+        """Test creating a user without a name raises an IntegrityError or validation error"""
+        email = 'test@example.com'
+        password = 'ValidPass123'
+        with self.assertRaises((IntegrityError, ValidationError)):
+            get_user_model().objects.create_user(
+                email=email,
+                password=password,
+                name=None
+            )
 
 
    
