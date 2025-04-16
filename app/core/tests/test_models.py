@@ -141,6 +141,68 @@ class ModelTests(TestCase):
         self.assertTrue(user.check_password(password))
         self.assertEqual(user.name, name)
 
+    def test_create_user_default_flags(self):
+        """Test default flags for a newly created standard user."""
+        email = 'defaultflags@example.com'
+        password = 'testpass123'
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+        )
+        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser) # Also check superuser default
+
+
+    def test_create_user_invalid_email_raises_error(self):
+        """Test creating user with an invalid email format raises ValidationError"""
+        with self.assertRaises(ValidationError):
+            user = get_user_model().objects.create_user(
+                email='invalid-email',
+                password='password123'
+            )
+            # EmailField validation happens during full_clean or save
+            user.full_clean() # Explicitly call full_clean
+
+
+    def test_create_user_email_too_long_raises_error(self):
+        """Test creating user with email > 255 chars raises ValidationError"""
+        long_email = 'a' * 245 + '@example.com' # 245 + 1 + 7 + 3 = 256 chars
+        self.assertTrue(len(long_email) > 255)
+        with self.assertRaises(ValidationError):
+             # Validation likely occurs during full_clean called by save() or model clean()
+             user = get_user_model().objects.create_user(
+                 email=long_email,
+                 password='password123',
+                 name='Test Name'
+             )
+             user.full_clean() # Explicitly call full_clean to trigger validation
+
+
+    def test_create_superuser_with_none_password(self):
+        """Test creating a superuser with None password"""
+        email = 'super_none_pass@example.com'
+        user = get_user_model().objects.create_superuser(
+            email,
+            None,
+        )
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.has_usable_password())
+
+
+    def test_create_superuser_with_none_email_raises_error(self):
+        """Test creating superuser with None email raises ValueError"""
+        with self.assertRaisesRegex(ValueError, 'User must have an email address'):
+            get_user_model().objects.create_superuser(email=None, password='test123')
+
+
+    def test_create_user_with_none_email_raises_error(self):
+        """Test creating user with None email raises ValueError"""
+        with self.assertRaisesRegex(ValueError, 'User must have an email address'):
+            get_user_model().objects.create_user(email=None, password='test123')
+
+
     # def test_create_users_with_duplicate_email(self):
     #     """Test that creating multiple users with the same email raises an IntegrityError"""
     #     email = 'duplicate@example.com'
