@@ -43,6 +43,65 @@ class ModelTests(TestCase):
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
+    def test_password_is_hashed(self):
+        """Test that the user password is set and stored hashed."""
+        email = 'hashed@example.com'
+        plain_password = 'testpass123'
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=plain_password,
+        )
+        # Retrieve the user again to ensure we get the stored value
+        saved_user = get_user_model().objects.get(email=email)
+        # Check the password attribute is not the plain text
+        self.assertNotEqual(saved_user.password, plain_password)
+        # Check it looks like a Django hashed password (starts with algorithm)
+        self.assertTrue(saved_user.password.startswith(('pbkdf2_sha256$', 'bcrypt$', 'argon2$')))
+        # Also verify check_password still works
+        self.assertTrue(saved_user.check_password(plain_password))
+
+
+    def test_create_user_with_non_boolean_is_active_raises_error(self):
+        """Test creating user with non-boolean is_active raises ValidationError."""
+        email = 'nonbool@example.com'
+        password = 'testpass123'
+        with self.assertRaises(ValidationError):
+            # Pass a string instead of a boolean for is_active
+            user = get_user_model().objects.create_user(
+                email=email,
+                password=password,
+                is_active='not-a-boolean'
+            )
+            # Validation might happen on full_clean called by save or explicitly
+            user.full_clean()
+            user.save() # Ensure save is attempted if full_clean doesn't raise
+
+
+    def test_create_user_with_none_email_raises_error(self):
+        """Test creating user with None email raises ValueError."""
+        with self.assertRaisesRegex(ValueError, 'User must have an email address'):
+            get_user_model().objects.create_user(email=None, password='test123')
+
+
+    def test_create_superuser_missing_password_raises_error(self):
+        """Test calling create_superuser without password raises TypeError."""
+        with self.assertRaises(TypeError):
+            # Call create_superuser missing the password argument
+            get_user_model().objects.create_superuser(email='test@example.com')
+
+
+    def test_email_normalization_with_whitespace(self):
+        """Test email normalization strips leading/trailing whitespace."""
+        email_with_space = "  test@example.com  "
+        expected_email = "test@example.com"
+        password = "testpass123"
+        user = get_user_model().objects.create_user(
+            email=email_with_space,
+            password=password,
+        )
+        self.assertEqual(user.email, expected_email)
+
+
 
     # def test_create_user_with_custom_is_active_flag(self):
     #     """Test creating a user with custom is_active flag"""
