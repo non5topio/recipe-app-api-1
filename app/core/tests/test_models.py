@@ -102,6 +102,120 @@ class ModelTests(TestCase):
         self.assertEqual(user.email, expected_email)
 
 
+    def test_create_user_with_empty_password(self):
+        """Test creating a user with empty password"""
+        email = 'test@example.com'
+        password = None
+        
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+        )
+        
+        self.assertEqual(user.email, email)
+        self.assertFalse(user.has_usable_password())
+        
+        # Verify default values
+        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
+
+    def test_create_user_with_custom_is_active_flag(self):
+        """Test creating a user with custom is_active flag"""
+        email = 'inactive@example.com'
+        password = 'validpass123'
+        
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            is_active=False
+        )
+        
+        self.assertEqual(user.email, email)
+        self.assertTrue(user.check_password(password))
+        self.assertFalse(user.is_active)
+        self.assertFalse(user.is_staff)  # Verify default value for is_staff
+
+
+    def test_create_superuser_with_custom_is_staff_false(self):
+        """Test creating a superuser with is_staff=False gets overridden to True"""
+        email = 'super@example.com'
+        password = 'pass123'
+        
+        # Attempt to create a superuser with is_staff=False
+        user = get_user_model().objects.create_superuser(
+            email=email,
+            password=password,
+        )
+        
+        # Verify is_staff is True regardless of input
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        
+        # Verify other attributes are set correctly
+        self.assertEqual(user.email, email)
+        self.assertTrue(user.check_password(password))
+
+
+    def test_create_user_with_invalid_email_format(self):
+        """Test creating a user with an invalid email format raises ValidationError"""
+        invalid_email = 'invalid-email-format'
+        password = 'validpass123'
+        
+        user = get_user_model().objects.create_user(
+            email=invalid_email,
+            password=password,
+        )
+        
+        # ValidationError should be raised during full_clean
+        with self.assertRaises(ValidationError):
+            user.full_clean()
+        
+        # Verify the user was created in the database but will fail validation
+        self.assertEqual(user.email, invalid_email)
+
+
+    def test_create_user_with_email_exceeding_max_length(self):
+        """Test creating a user with email exceeding 255 characters raises ValidationError"""
+        long_email = 'a' * 244 + '@example.com'  # 244 + 12 = 256 characters
+        password = 'validpass123'
+        
+        user = get_user_model().objects.create_user(
+            email=long_email,
+            password=password,
+        )
+        
+        # ValidationError should be raised during full_clean
+        with self.assertRaises(ValidationError):
+            user.full_clean()
+        
+        # Verify the user was created in the database but will fail validation
+        self.assertEqual(user.email, long_email)
+        self.assertTrue(len(user.email) > 255)
+
+
+    def test_create_user_with_name_exceeding_max_length(self):
+        """Test creating a user with a name exceeding 255 characters raises ValidationError"""
+        email = 'test@example.com'
+        password = 'validpass123'
+        name = 'a' * 256  # One character beyond the max length of 255
+        
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name
+        )
+        
+        # ValidationError should be raised during full_clean
+        with self.assertRaises(ValidationError):
+            user.full_clean()
+        
+        # Verify the user was created in the database but will fail validation
+        self.assertEqual(user.email, email)
+        self.assertEqual(len(user.name), 256)
+
+
 
     # def test_create_user_with_custom_is_active_flag(self):
     #     """Test creating a user with custom is_active flag"""
