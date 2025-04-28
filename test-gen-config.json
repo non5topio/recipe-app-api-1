@@ -10,7 +10,7 @@
       "test-files-folders": [
         "app/core"
       ],
-      "mode": "dry_run",
+      "mode": "evaluation",
       "source-test-file-paths": [
         {
           "source-file-path": "app/core/models.py",
