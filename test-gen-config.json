@@ -10,7 +10,6 @@
       "test-files-folders": [
         "app/core"
       ],
-      "mode": "evaluation",
       "source-test-file-paths": [
         {
           "source-file-path": "app/core/models.py",
