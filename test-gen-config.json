@@ -20,7 +20,7 @@
       "coverage-type": "cobertura",
       "code-coverage-report-path": "app/core/tests/coverage.xml",
       "desired-coverage": 100,
-      "max-iterations": 2,
+      "max-iterations": 1,
       "max-number-of-test-cases": 6
       }
   }
