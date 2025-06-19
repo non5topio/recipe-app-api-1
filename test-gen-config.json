@@ -1,0 +1,26 @@
+{
+    "enabled": "true",
+    "increase-coverage": {
+      "project-name": "recipe-app-api-1",
+      "target-branches": [
+        "main"
+      ],
+      "test-env-docker-stage": "test",
+      "build-test-env-docker-stage-script-path": "tool/build-test-env-docker-stage.sh",
+      "test-files-folders": [
+        "app/core"
+      ],
+      "source-test-file-paths": [
+        {
+          "source-file-path": "app/core/models.py",
+          "test-file-path": "app/core/tests/test_models.py"
+        }
+      ],
+      "test-command": "pytest --cov=app/core --cov-report=xml:app/core/tests/coverage.xml --cov-report=term -c pytest.ini",
+      "coverage-type": "cobertura",
+      "code-coverage-report-path": "app/core/tests/coverage.xml",
+      "desired-coverage": 100,
+      "max-iterations": 1,
+      "max-number-of-test-cases": 6
+      }
+  }
