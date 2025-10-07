@@ -13,10 +13,10 @@
       "source-test-file-paths": [
         {
           "source-file-path": "app/core/models.py",
-          "test-file-path": "app/core/tests/test_models.py"
+          "test-file-path": "app/core/tests/test_models.py",
+          "test-command": "pytest --cov=app/core --cov-report=xml:app/core/tests/coverage.xml --cov-report=term -c pytest.ini"
         }
       ],
-      "test-command": "pytest --cov=app/core --cov-report=xml:app/core/tests/coverage.xml --cov-report=term -c pytest.ini",
       "coverage-type": "cobertura",
       "code-coverage-report-path": "app/core/tests/coverage.xml",
       "desired-coverage": 100,
