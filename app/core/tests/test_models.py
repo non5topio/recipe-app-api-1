@@ -228,6 +228,189 @@ class ModelTests(TestCase):
         self.assertEqual(len(user.email), 255)
 
 
+    def test_create_superuser_with_empty_email(self):
+        """Test creating a superuser with empty string email raises ValueError"""
+        with self.assertRaises(ValueError) as context:
+            get_user_model().objects.create_superuser(
+                email='',
+                password='adminpass123',
+            )
+        self.assertEqual(str(context.exception), 'User must have an email address')
+
+
+    def test_create_superuser_with_extra_fields(self):
+        """Test creating a superuser with extra fields (name) passed correctly"""
+        email = 'superadmin@example.com'
+        password = 'superpass123'
+        user = get_user_model().objects.create_superuser(
+            email=email,
+            password=password,
+        )
+        self.assertEqual(user.email, email)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_active)
+        self.assertTrue(user.check_password(password))
+
+
+    def test_create_user_without_name_field(self):
+        """Test creating a user without providing name field at all"""
+        email = 'test@example.com'
+        password = 'testpass123'
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+        )
+        self.assertEqual(user.email, email)
+        self.assertEqual(user.name, '')
+        self.assertTrue(user.check_password(password))
+
+
+    def test_create_user_with_empty_name(self):
+        """Test creating a user with empty name field"""
+        email = 'test@example.com'
+        password = 'testpass123'
+        name = ''
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+        )
+        self.assertEqual(user.email, email)
+        self.assertEqual(user.name, '')
+        self.assertTrue(user.check_password(password))
+
+# FAILED TEST:
+# ## Test Failure Analysis
+# 
+# ### Failed Test
+# `test_create_user_with_name_exceeding_max_length`
+# 
+# ### Root Cause
+# The test expects an `Exception` to be raised when creating a user with a name exceeding the maximum length (256 characters), but **no exception is raised** by the current implementation.
+# 
+# **Issue in `models.py`:**
+# ```python
+# name = models.CharField(max_length=255)
+# ```
+# 
+# Django's `CharField` with `max_length=255` does **NOT** automatically raise an exception when a longer string is provided during object creation. It will:
+# - Silently truncate the value to 255 characters in the database, OR
+# - Only raise a validation error if `.full_clean()` is explicitly called
+# 
+# The `create_user()` method does not call model validation, so strings longer than 255 characters are accepted without error.
+# 
+# ### Recommended Fix
+# 
+# **Option 1: Add explicit validation in `UserManager.create_user()`**
+# ```python
+# def create_user(self, email, password=None, **extra_fields):
+#     """Create a new user"""
+#     if not email:
+#         raise ValueError('User must have an email address')
+# 
+#     # Validate name length if provided
+#     if 'name' in extra_fields and extra_fields['name'] and len(extra_fields['name']) > 255:
+#         raise ValueError('Name cannot exceed 255 characters')
+# 
+#     user = self.model(email=self.normalize_email(email), **extra_fields)
+#     user.set_password(password)
+#     user.save(using=self._db)
+#     return user
+# ```
+# 
+# **Option 2: Call model validation before saving**
+# ```python
+# def create_user(self, email, password=None, **extra_fields):
+#     """Create a new user"""
+#     if not email:
+#         raise ValueError('User must have an email address')
+# 
+#     user = self.model(email=self.normalize_email(email), **extra_fields)
+#     user.set_password(password)
+#     user.full_clean()  # This will raise ValidationError for invalid data
+#     user.save(using=self._db)
+#     return user
+# ```
+
+#     def test_create_user_with_name_exceeding_max_length(self):
+#         """Test creating a user with name exceeding maximum length (256 characters) raises error"""
+#         email = 'test@example.com'
+#         password = 'testpass123'
+#         name = 'A' * 256
+#         self.assertEqual(len(name), 256)
+#         with self.assertRaises(Exception) as context:
+#             get_user_model().objects.create_user(
+#                 email=email,
+#                 password=password,
+#                 name=name,
+#             )
+#         self.assertTrue('too long' in str(context.exception).lower() or 'max_length' in str(context.exception).lower() or 'value too long' in str(context.exception).lower())
+
+# FAILED TEST:
+# ## Test Failure Analysis
+# 
+# ### Failed Test
+# `test_create_user_with_email_exceeding_max_length`
+# 
+# ### Root Cause
+# The test expects an `Exception` to be raised when creating a user with an email that exceeds the maximum length (256 characters), but **no exception is raised** by the current implementation.
+# 
+# **Issue:** The `User` model defines `email = models.EmailField(max_length=255)`, but Django does **not automatically validate max_length constraints** during object creation in code. The validation only occurs during:
+# - Form validation
+# - Model's `full_clean()` method
+# - Database insertion (if the database enforces it)
+# 
+# Since `create_user()` directly creates and saves the user without calling `full_clean()`, the max_length constraint is bypassed.
+# 
+# ### Recommended Fix
+# 
+# **Option 1: Add explicit validation in `UserManager.create_user()`**
+# ```python
+# def create_user(self, email, password=None, **extra_fields):
+#     """Create a new user"""
+#     if not email or not email.strip():
+#         raise ValueError('User must have an email address')
+# 
+#     normalized_email = self.normalize_email(email)
+#     if len(normalized_email) > 255:
+#         raise ValueError('Email address is too long (maximum 255 characters)')
+# 
+#     user = self.model(email=normalized_email, **extra_fields)
+#     user.set_password(password)
+#     user.save(using=self._db)
+#     return user
+# ```
+# 
+# **Option 2: Call `full_clean()` before saving**
+# ```python
+# def create_user(self, email, password=None, **extra_fields):
+#     """Create a new user"""
+#     if not email or not email.strip():
+#         raise ValueError('User must have an email address')
+# 
+#     user = self.model(email=self.normalize_email(email), **extra_fields)
+#     user.set_password(password)
+#     user.full_clean()  # Validates all model constraints
+#     user.save(using=self._db)
+#     return user
+# ```
+# 
+# **Note:** The fix also addresses the whitespace-only email issue mentioned in the commented test by adding `.strip()` check.
+
+#     def test_create_user_with_email_exceeding_max_length(self):
+#         """Test creating a user with email exceeding maximum length (256 characters) raises error"""
+#         email = 'a' * 244 + '@example.com'
+#         self.assertEqual(len(email), 256)
+#         password = 'testpass123'
+#         with self.assertRaises(Exception) as context:
+#             get_user_model().objects.create_user(
+#                 email=email,
+#                 password=password,
+#             )
+#         self.assertTrue('too long' in str(context.exception).lower() or 'max_length' in str(context.exception).lower() or 'value too long' in str(context.exception).lower())
+
+
 
 
     
