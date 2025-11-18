@@ -442,6 +442,62 @@ class ModelTests(TestCase):
 #                 name=name,
 #             )
 #         self.assertTrue('too long' in str(context.exception).lower() or 'max_length' in str(context.exception).lower() or 'value too long' in str(context.exception).lower())
+# FAILED TEST:
+# **Test Failure Analysis:**
+# 
+# - **Failed Test:** `test_create_superuser_with_whitespace_only_email_raises_error`
+# - **Root Cause:** The test expects a `ValueError` when creating a superuser with a whitespace-only email (`'   '`), but the current validation in `UserManager.create_user()` only checks for `None` or empty string (`''`), not whitespace-only strings.
+# - **Issue in Code:**
+#   ```python
+#   if not email:
+#       raise ValueError('User must have an email address')
+#   ```
+#   This condition does **not** catch whitespace-only strings, as they are truthy in Python.
+# 
+# **Recommended Fix:**
+# 
+# Update the validation in `UserManager.create_user()` to explicitly check for whitespace-only emails:
+# ```python
+# email = email.strip()
+# if not email:
+#     raise ValueError('User must have an email address')
+# ```
+
+#     def test_create_superuser_with_whitespace_only_email_raises_error(self):
+#         """Test creating a superuser with whitespace-only email raises ValueError"""
+#         with self.assertRaises(ValueError) as context:
+#             get_user_model().objects.create_superuser(
+#                 email='   ',
+#                 password='adminpass123',
+#             )
+#         self.assertEqual(str(context.exception), 'User must have an email address')
+
+# FAILED TEST:
+# **Test Failure Analysis:**
+# 
+# - **Failed Test:** `test_create_user_with_whitespace_only_email_raises_error`
+# - **Root Cause:** The current validation in `UserManager.create_user()` only checks if `email` is falsy (`None` or `''`), but not whitespace-only strings like `'   '`, which are truthy in Python.
+# - **Issue in Code:**
+#   ```python
+#   if not email:
+#       raise ValueError('User must have an email address')
+#   ```
+# - **Recommended Fix:** Update the validation to strip whitespace and check for an empty string:
+#   ```python
+#   email = email.strip()
+#   if not email:
+#       raise ValueError('User must have an email address')
+#   ```
+
+#     def test_create_user_with_whitespace_only_email_raises_error(self):
+#         """Test creating a user with whitespace-only email raises ValueError"""
+#         with self.assertRaises(ValueError) as context:
+#             get_user_model().objects.create_user(
+#                 email='   ',
+#                 password='testpass123',
+#             )
+#         self.assertEqual(str(context.exception), 'User must have an email address')
+
 
 # FAILED TEST:
 # ## Test Failure Analysis
